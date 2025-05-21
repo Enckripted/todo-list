@@ -1,11 +1,13 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { computed, onMounted } from 'vue'
+
+import { useTaskDatabase } from './composables/taskDatabase'
 
 import ListItem from './components/ListItem.vue'
 import TaskModal from './components/TaskModal.vue'
 
-const id = ref(0)
-const tasks = ref([])
+const { tasks, addTask, removeTask } = useTaskDatabase()
+console.log(tasks)
 
 const incompleteTasks = computed(() => {
   return tasks.value.filter((task) => !task.taskDone).sort((a, b) => a.deadline - b.deadline)
@@ -13,22 +15,6 @@ const incompleteTasks = computed(() => {
 const completeTasks = computed(() => {
   return tasks.value.filter((task) => task.taskDone).sort((a, b) => a.deadline - b.deadline)
 })
-
-function addTask(taskDescription, taskDone, deadline) {
-  let newTask = {
-    id: id.value++,
-    taskDescription: taskDescription,
-    taskDone: taskDone,
-    deadline: deadline,
-    late: false,
-  }
-  tasks.value.push(newTask)
-  checkAllLateTasks()
-}
-
-function removeTask(id) {
-  tasks.value = tasks.value.filter((task) => task.id == id)
-}
 
 function checkAllLateTasks() {
   console.log("checking late")
@@ -56,6 +42,7 @@ function getDeadlineText(deadline) {
 }
 
 onMounted(() => {
+  //run checkAllLateTasks at the end of every minute
   setTimeout(() => {
     checkAllLateTasks()
     setInterval(() => {
@@ -76,7 +63,7 @@ onMounted(() => {
     <div v-for="task in [...incompleteTasks, ...completeTasks]" :key="task.id" class="items">
       <ListItem v-model="task.done" :id="task.id" :deadline="getDeadlineText(task.deadline)" :late="task.late"
         @delete-item="removeTask">
-        {{ task.taskDescription }}
+        {{ task.description }}
       </ListItem>
     </div>
   </div>

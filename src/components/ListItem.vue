@@ -1,17 +1,18 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 const { id, deadline, late } = defineProps(['id', 'deadline', 'late'])
-const emit = defineEmits(["delete-item"])
 const done = defineModel()
+const emit = defineEmits(["delete-item"])
 
 const isLate = computed(() => {
   return !done.value && late
 })
 
 function deleteItem() {
-  emit("delete-item", id + 1) //figure out why this happens in the first place
+  emit("delete-item", id) //figure out why this happens in the first place
 }
 
+onMounted(() => console.log(id))
 </script>
 
 <template>
@@ -19,11 +20,11 @@ function deleteItem() {
     <div class='list-item-check'>
       <input type="checkbox" v-model="done" />
     </div>
-    <div class='list-item-text'>
-      <span :class="{ strikethrough: done, late: isLate, 'list-item-inner': true }">
+    <div class='list-item-text' :class = "{ strikethrough: done, late: isLate }">
+      <span class = "list-item-inner">
         <slot></slot>
       </span>
-      <span :class="{ strikethrough: done, late: isLate }">{{ deadline }}</span>
+      <span>{{ deadline }}</span>
     </div>
 
     <span class="list-item-delete underline" @click="deleteItem">Delete</span>
