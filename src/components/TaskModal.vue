@@ -1,17 +1,18 @@
 <script setup>
 import { ref } from 'vue';
-const emit = defineEmits(['submitModal'])
+import { useTaskDatabase } from '@/composables/taskDatabase';
 
-function convertToHtmlInputDate(year, month, day) {
-  //note: months in javascript are zero-indexed
-  return `${year}-${month < 9 ? "0" : ""}${month + 1}-${day}`
-}
+const { addTask } = useTaskDatabase()
 
 const showModal = ref(false)
 
 const taskDescription = ref("")
 const taskDate = ref("")
 const taskTime = ref("")
+
+function convertToHtmlInputDate(year, month, day) {
+  return `${year}-${month < 9 ? "0" : ""}${month + 1}-${day}` //note: months in javascript are zero-indexed
+}
 
 function openModal() {
   let currentDate = new Date()
@@ -28,9 +29,8 @@ function closeModal() {
 }
 
 function submitModal() {
-  //TODO: check if part of this if statement is needed (can date and time values be invalid and cause problems?)
-  if (taskDescription.value && taskDate.value && taskTime.value)
-    emit('submit-modal', taskDescription.value, false, new Date(`${taskDate.value} ${taskTime.value}`))
+  if (taskDescription.value && taskDate.value && taskTime.value) //TODO: check if part of this if statement is needed (can date and time values be invalid and cause problems?)
+    addTask(taskDescription.value, false, new Date(`${taskDate.value} ${taskTime.value}`))
   closeModal()
 }
 </script>

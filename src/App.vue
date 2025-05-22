@@ -1,13 +1,13 @@
 <script setup>
 import { computed, onMounted } from 'vue'
-
 import { useTaskDatabase } from './composables/taskDatabase'
 
 import ListItem from './components/ListItem.vue'
 import TaskModal from './components/TaskModal.vue'
 
-const { tasks, addTask, removeTask } = useTaskDatabase()
-console.log(tasks)
+const { taskStreak, tasks, checkAllLateTasks } = useTaskDatabase()
+
+let alreadyMounted = false //for dev purposes
 
 const incompleteTasks = computed(() => {
   return tasks.value.filter((task) => !task.taskDone).sort((a, b) => a.deadline - b.deadline)
@@ -15,15 +15,6 @@ const incompleteTasks = computed(() => {
 const completeTasks = computed(() => {
   return tasks.value.filter((task) => task.taskDone).sort((a, b) => a.deadline - b.deadline)
 })
-
-function checkAllLateTasks() {
-  console.log("checking late")
-  for (let task of tasks.value) {
-    if (!task.late && task.deadline - new Date() < 0) {
-      task.late = true
-    }
-  }
-}
 
 function getDeadlineText(deadline) {
   let current = new Date()
@@ -34,8 +25,7 @@ function getDeadlineText(deadline) {
 
   if (datesInSameMonth && current.getDate() == deadline.getDate()) {
     return "Today - " + timeString
-  }
-  if (datesInSameMonth && current.getDate() + 1 == deadline.getDate()) {
+  } else if (datesInSameMonth && current.getDate() + 1 == deadline.getDate()) {
     return "Tomorrow - " + timeString
   }
   return dateString + " - " + timeString
@@ -43,6 +33,10 @@ function getDeadlineText(deadline) {
 
 onMounted(() => {
   //run checkAllLateTasks at the end of every minute
+  if (alreadyMounted)
+    return
+  alreadyMounted = true
+
   setTimeout(() => {
     checkAllLateTasks()
     setInterval(() => {
@@ -56,13 +50,12 @@ onMounted(() => {
 <template>
   <div class="content">
     <h1>Todo List</h1>
-    <h3>Task Completion Streak: 0</h3>
+    <h3>Task Completion Streak: {{ taskStreak }}</h3>
 
-    <TaskModal @submit-modal="addTask" />
+    <TaskModal />
 
     <div v-for="task in [...incompleteTasks, ...completeTasks]" :key="task.id" class="items">
-      <ListItem v-model="task.done" :id="task.id" :deadline="getDeadlineText(task.deadline)" :late="task.late"
-        @delete-item="removeTask">
+      <ListItem v-model="task.done" :id="task.id" :deadline="getDeadlineText(task.deadline)" :late="task.late">
         {{ task.description }}
       </ListItem>
     </div>
